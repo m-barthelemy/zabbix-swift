@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		515CE21E1CF7238A00714DC9 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515CE21D1CF7238A00714DC9 /* main.swift */; };
+		515CE2261CF726D100714DC9 /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = 515CE2251CF726D100714DC9 /* Package.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +24,8 @@
 
 /* Begin PBXFileReference section */
 		515CE21A1CF7238A00714DC9 /* zabbix-swift */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "zabbix-swift"; sourceTree = BUILT_PRODUCTS_DIR; };
-		515CE21D1CF7238A00714DC9 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		515CE2241CF726B700714DC9 /* Sources */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sources; sourceTree = "<group>"; };
+		515CE2251CF726D100714DC9 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,7 +42,8 @@
 		515CE2111CF7238A00714DC9 = {
 			isa = PBXGroup;
 			children = (
-				515CE21C1CF7238A00714DC9 /* zabbix-swift */,
+				515CE2251CF726D100714DC9 /* Package.swift */,
+				515CE2241CF726B700714DC9 /* Sources */,
 				515CE21B1CF7238A00714DC9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -52,14 +54,6 @@
 				515CE21A1CF7238A00714DC9 /* zabbix-swift */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		515CE21C1CF7238A00714DC9 /* zabbix-swift */ = {
-			isa = PBXGroup;
-			children = (
-				515CE21D1CF7238A00714DC9 /* main.swift */,
-			);
-			path = "zabbix-swift";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -119,7 +113,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				515CE21E1CF7238A00714DC9 /* main.swift in Sources */,
+				515CE2261CF726D100714DC9 /* Package.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -211,13 +205,18 @@
 		515CE2221CF7238A00714DC9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
 		};
 		515CE2231CF7238A00714DC9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

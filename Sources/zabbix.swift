@@ -180,23 +180,23 @@ public class Zabbix {
     
     public static var Timeout:Int = 3;
     
-    private static var metrics = [String: ((Array<String>) throws -> String)]();
+    internal static var metrics = [String: ((Array<String>) throws -> String)]();
     
     public static var Metrics : [String: ((Array<String>) throws -> String)] {
         get{
             return metrics
         }
-        set(metricsList){
+        /*set(metricsList){
             metrics = metricsList
-        }
+        }*/
     }
     
-    /*public static func registerMetrics([key: String, function: ((Array<String>) throws -> String) ]) -> Bool {
-        
+    public static func registerMetrics(metricsList: [String: ((Array<String>) throws -> String) ]) -> Bool {
+        metrics = metricsList
         return true
-    }*/
+    }
     
-    static func log(_ level:LogLevel = default_level, message: String) {
+    public static func log(_ level:LogLevel = default_level, message: String) {
         
         let cMessage = message.cString(using: NSUTF8StringEncoding)!
         let msgPtr = UnsafeMutablePointer<Int8>(cMessage)

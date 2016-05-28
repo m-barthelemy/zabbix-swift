@@ -192,6 +192,7 @@ public class Zabbix {
     }
     
     public static func registerMetrics(metricsList: [String: ((Array<String>) throws -> String) ]) -> Bool {
+        log(message: "[zbx-swift]: registering metrics.")
         metrics = metricsList
         return true
     }

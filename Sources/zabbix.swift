@@ -27,8 +27,8 @@ func zbx_module_api_version() -> Int32 {
 }
 
 
-@_cdecl("zbx_module_init")
-func zbx_module_init() -> Int32 {
+//@_cdecl("zbx_module_init")
+func old_zbx_module_init() -> Int32 {
     
     Zabbix.log(default_level, message:"[zbx-swift]: zbx_module_init called")
     
@@ -69,38 +69,48 @@ func zbx_module_item_list() -> UnsafeMutablePointer<CZabbix.ZBX_METRIC> {
     Zabbix.log(default_level, message:"[zbx-swift]: zbx_module_item_list called.")
     
     // The returned list of metrics must be (real_size +1) else zabbix will crash
-    let metrics = UnsafeMutablePointer<CZabbix.ZBX_METRIC>(allocatingCapacity:Zabbix.Metrics.count+1)
-    
+    let metrics = UnsafeMutablePointer<CZabbix.ZBX_METRIC>(allocatingCapacity: Zabbix.Metrics.count+1)
     var index = 0
+
+
     for (key, _) in Zabbix.Metrics {
         
         guard !key.isEmpty else{
-            Zabbix.log(LogLevel.Error, message:"[zbx-swift]: metric with null key, ignoring.")
+            Zabbix.log(LogLevel.Warning, message:"[zbx-swift]: metric with null key, ignoring.")
             continue
         }
         
         var metric = CZabbix.ZBX_METRIC()
-        
+       
         let cKey = key.cString(using: NSUTF8StringEncoding)!
-        metric.key = UnsafeMutablePointer(cKey)
+        metric = CZabbix.ZBX_METRIC()
+
+        metric.key = UnsafeMutablePointer<CChar>(allocatingCapacity: cKey.count+1)
+        for i:Int in 0..<Int(cKey.count) {
+            metric.key[i] = cKey[i]
+        }
         
         metric.flags = UInt32(CZabbix.CF_HAVEPARAMS)
         metric.function = process_agent_request
         
-        let params = ""
+        let params = String(" , ")
         let cParam = params.cString(using: NSUTF8StringEncoding)!
         metric.test_param = UnsafeMutablePointer(cParam)
         
         metrics[index] = metric
-        Zabbix.log(default_level, message:"[zbx-swift]: added metric \(key)[].")
+        Zabbix.log(default_level, message:"[zbx-swift]: added item #\(index) : \(key)[].")
         index += 1
     }
     
-    // From Zabbix doc: "The list is terminated by a ZBX_METRIC structure with “key” field of NULL."
+    // From Zabbix doc: "The list is terminated by a ZBX_METRIC structure with a null key field."
     metrics[index] = CZabbix.ZBX_METRIC()
-    
+    metrics[index].key = nil
+
+    Zabbix.log(default_level, message: "[zbx-swift]: added \(Zabbix.Metrics.count) items.")
+
     return metrics
 }
+
 
 var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_REQUEST>?, UnsafeMutablePointer<CZabbix.AGENT_RESULT>?) -> Int32 = {
     (req, res) -> Int32 in
@@ -113,7 +123,7 @@ var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_R
     let agentRequest: CZabbix.AGENT_REQUEST = req!.pointee
     
     let requestKey:String = String(UTF8String: UnsafeMutablePointer<CChar>(agentRequest.key))!
-    Zabbix.log(default_level, message:"[zbx-swift]: Agent Request Key = '\(requestKey)' with \(agentRequest.nparam) parameters.")
+    Zabbix.log(default_level, message: "[zbx-swift]: Agent Request Key = '\(requestKey)' with \(agentRequest.nparam) parameters.")
     
     var requestParams = UnsafePointer<UnsafeMutablePointer<Int8>>(agentRequest.params)
     var parameters: [String] = Array<String>()
@@ -124,18 +134,14 @@ var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_R
     }
     
     do{
-        /*if parameters.count < 3 {
-            throw GenericError.BadParameters("Zabbix item \(requestKey) expects 3 parameters, but only \(parameters.count) were given.")
-        }*/
+        res!.pointee.type =  CZabbix.AR_TEXT //CZabbix.AR_STRING is limited to 255 "chars"
         
         let result = try Zabbix.Metrics[requestKey]?(parameters)
-        
-        res!.pointee.type =  CZabbix.AR_TEXT //CZabbix.AR_STRING is limited to 255 "chars"
         guard result != nil else {
             return CZabbix.SYSINFO_RET_OK
         }
+        
         var cResponseStr = result!.cString(using: NSUTF8StringEncoding)!
-        //var cResponseStr = result!.cString(using: CFStringBuiltInEncodings.UTF8.rawValue)
         
         // Directly setting 'text' makes Zabbix crash when attempting to free() something (the AgentResult struct or something inside it)
         // Setting chars one by one seems do to the trick. Swift/C expert advice needed ;-)
@@ -182,20 +188,20 @@ public class Zabbix {
     
     internal static var metrics = [String: ((Array<String>) throws -> String)]();
     
+    
     public static var Metrics : [String: ((Array<String>) throws -> String)] {
         get{
             return metrics
         }
-        /*set(metricsList){
-            metrics = metricsList
-        }*/
     }
     
-    public static func registerMetrics(metricsList: [String: ((Array<String>) throws -> String) ]) -> Bool {
+    
+    public static func registerMetrics(metricsList: [String: ((Array<String>) throws -> String) ]) -> Int32 {
         log(message: "[zbx-swift]: registering metrics.")
         metrics = metricsList
-        return true
+        return CZabbix.ZBX_MODULE_OK
     }
+    
     
     public static func log(_ level:LogLevel = default_level, message: String) {
         

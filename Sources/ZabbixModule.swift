@@ -6,7 +6,14 @@
 //
 //
 
-//import Foundation
+
+
+// This is a failed attempt at making a plugin system by requiring the plugin to implement a protocol
+//  and then find it at runtime. 
+// Due to Sfwift's very limited reflection capabilities, it doesn't seem to be possible for now.
+
+
+
 import Glibc
 
 public enum ZabbixFunction {

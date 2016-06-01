@@ -12,7 +12,7 @@ import CZabbix
 import Glibc
 
 
-let default_level = LogLevel.Info
+let default_level = LogLevel.Debug
 
 enum GenericError : ErrorProtocol {
     case BadParameters(String)
@@ -203,7 +203,7 @@ public class Zabbix {
     }
     
     
-    public static func log(_ level:LogLevel = default_level, message: String) {
+    public static func log(_ level: LogLevel = default_level, message: String) {
         
         let cMessage = message.cString(using: NSUTF8StringEncoding)!
         let msgPtr = UnsafeMutablePointer<Int8>(cMessage)

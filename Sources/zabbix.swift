@@ -27,7 +27,11 @@ func zbx_module_api_version() -> Int32 {
 }
 
 
-//@_cdecl("zbx_module_init")
+// We cannot use this entry point here, since it is the only way
+// for a module using this library to get "seen"/called by Zabbix
+// Still looking for a more elegant way ; unfortunately Swift
+// reflection capabilities are quite limited.
+/*@_cdecl("zbx_module_init")
 func old_zbx_module_init() -> Int32 {
     
     Zabbix.log(default_level, message:"[zbx-swift]: zbx_module_init called")
@@ -45,7 +49,7 @@ func old_zbx_module_init() -> Int32 {
     Zabbix.log(LogLevel.Info,  message: "[zbx-swift]: v\(zbxSwiftVersion), using Swift v\(swiftVersion)")
     
     return CZabbix.ZBX_MODULE_OK
-}
+}*/
 
 @_cdecl("zbx_module_uninit")
 func zbx_module_uninit() -> Int32 {
@@ -71,7 +75,6 @@ func zbx_module_item_list() -> UnsafeMutablePointer<CZabbix.ZBX_METRIC> {
     // The returned list of metrics must be (real_size +1) else zabbix will crash
     let metrics = UnsafeMutablePointer<CZabbix.ZBX_METRIC>(allocatingCapacity: Zabbix.Metrics.count+1)
     var index = 0
-
 
     for (key, _) in Zabbix.Metrics {
         

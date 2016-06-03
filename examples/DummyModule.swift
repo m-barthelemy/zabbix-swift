@@ -17,9 +17,6 @@ func zbx_module_init() -> Int32 {
 }
 
 
-enum DummyModuleError: ErrorType {
-    case BadParameters(String) 
-}
 
 public final class Dummy {
 
@@ -32,7 +29,9 @@ public final class Dummy {
 
         if params.count == 0 {
             // This will get logged by Zabbix, and will mark this item as unsupported.
-            throw DummyModuleError.BadParameters("This item expects 1 parameter")            
+            // Here we reuse a generic exception defined in ZabbixModule, but any
+            // custom exception will work fine.
+            throw GenericError.BadParameters("This item expects 1 parameter")
         }
 
         // Like any good and useful echo command, we return the string passed as parameter

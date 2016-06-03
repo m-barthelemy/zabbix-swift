@@ -26,6 +26,7 @@
 		515CE21A1CF7238A00714DC9 /* zabbix-swift */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "zabbix-swift"; sourceTree = BUILT_PRODUCTS_DIR; };
 		515CE2241CF726B700714DC9 /* Sources */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Sources; sourceTree = "<group>"; };
 		515CE2251CF726D100714DC9 /* Package.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Package.swift; sourceTree = "<group>"; };
+		515CE23D1D01C05400714DC9 /* examples */ = {isa = PBXFileReference; lastKnownFileType = folder; path = examples; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,6 +43,7 @@
 		515CE2111CF7238A00714DC9 = {
 			isa = PBXGroup;
 			children = (
+				515CE23D1D01C05400714DC9 /* examples */,
 				515CE2251CF726D100714DC9 /* Package.swift */,
 				515CE2241CF726B700714DC9 /* Sources */,
 				515CE21B1CF7238A00714DC9 /* Products */,
@@ -240,6 +242,7 @@
 				515CE2231CF7238A00714DC9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

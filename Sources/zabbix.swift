@@ -51,12 +51,12 @@ func old_zbx_module_init() -> Int32 {
     return CZabbix.ZBX_MODULE_OK
 }*/
 
-@_cdecl("zbx_module_uninit")
+/*@_cdecl("zbx_module_uninit")
 func zbx_module_uninit() -> Int32 {
     
     Zabbix.log(default_level, message:"[zbx-swift]: zbx_module_uninit called")
     return CZabbix.ZBX_MODULE_OK
-}
+}*/
 
 
 @_cdecl("zbx_module_item_timeout")
@@ -189,8 +189,7 @@ public class Zabbix {
     
     public static var Timeout:Int = 3;
     
-    internal static var metrics = [String: ((Array<String>) throws -> String)]();
-    
+    internal static var metrics = [String: ((Array<String>) throws -> String)]()
     
     public static var Metrics : [String: ((Array<String>) throws -> String)] {
         get{

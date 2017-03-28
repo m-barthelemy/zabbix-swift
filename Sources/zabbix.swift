@@ -14,7 +14,7 @@ import Glibc
 
 let default_level = LogLevel.Debug
 
-enum GenericError : ErrorProtocol {
+enum GenericError : Error {
     case BadParameters(String)
     case BadZabbixParameters(String)
 }
@@ -73,7 +73,7 @@ func zbx_module_item_list() -> UnsafeMutablePointer<CZabbix.ZBX_METRIC> {
     Zabbix.log(default_level, message:"[zbx-swift]: zbx_module_item_list called.")
     
     // The returned list of metrics must be (real_size +1) else zabbix will crash
-    let metrics = UnsafeMutablePointer<CZabbix.ZBX_METRIC>(allocatingCapacity: Zabbix.Metrics.count+1)
+    let metrics = UnsafeMutablePointer<CZabbix.ZBX_METRIC>.allocate(capacity: Zabbix.Metrics.count+1)
     var index = 0
 
     for (key, _) in Zabbix.Metrics {
@@ -85,10 +85,10 @@ func zbx_module_item_list() -> UnsafeMutablePointer<CZabbix.ZBX_METRIC> {
         
         var metric = CZabbix.ZBX_METRIC()
        
-        let cKey = key.cString(using: NSUTF8StringEncoding)!
+        let cKey = key.cString(using: .utf8)!
         metric = CZabbix.ZBX_METRIC()
 
-        metric.key = UnsafeMutablePointer<CChar>(allocatingCapacity: cKey.count+1)
+        metric.key = UnsafeMutablePointer<CChar>.allocate(capacity: cKey.count+1)
         for i:Int in 0..<Int(cKey.count) {
             metric.key[i] = cKey[i]
         }
@@ -97,8 +97,8 @@ func zbx_module_item_list() -> UnsafeMutablePointer<CZabbix.ZBX_METRIC> {
         metric.function = process_agent_request
         
         let params = String(" , ")
-        let cParam = params.cString(using: NSUTF8StringEncoding)!
-        metric.test_param = UnsafeMutablePointer(cParam)
+        let cParam = params!.cString(using: .utf8)!
+        metric.test_param = UnsafeMutablePointer(mutating: cParam)
         
         metrics[index] = metric
         Zabbix.log(default_level, message:"[zbx-swift]: added item #\(index) : \(key)[].")
@@ -114,7 +114,6 @@ func zbx_module_item_list() -> UnsafeMutablePointer<CZabbix.ZBX_METRIC> {
     return metrics
 }
 
-
 var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_REQUEST>?, UnsafeMutablePointer<CZabbix.AGENT_RESULT>?) -> Int32 = {
     (req, res) -> Int32 in
     
@@ -123,17 +122,27 @@ var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_R
         return CZabbix.SYSINFO_RET_FAIL;
     }
     
-    let agentRequest: CZabbix.AGENT_REQUEST = req!.pointee
+    var agentRequest: CZabbix.AGENT_REQUEST = req!.pointee
     
-    let requestKey:String = String(UTF8String: UnsafeMutablePointer<CChar>(agentRequest.key))!
+    //let requestKey:String = String(data: UnsafeMutablePointer<Int8>(agentRequest.key), encoding: .utf8)
+    let requestKey:String = String(cString: UnsafeMutablePointer<Int8>(agentRequest.key))
     Zabbix.log(default_level, message: "[zbx-swift]: Agent Request Key = '\(requestKey)' with \(agentRequest.nparam) parameters.")
-    
-    var requestParams = UnsafePointer<UnsafeMutablePointer<Int8>>(agentRequest.params)
+   
+    let requestParamsRaw = UnsafeRawPointer(agentRequest.params)
+    //var requestParams = UnsafePointer<UnsafeMutablePointer<Int8>>(agentRequest.params)
     var parameters: [String] = Array<String>()
-    for index:Int in 0..<Int(agentRequest.nparam) {
-        let cParam = requestParams![index]
-        let requestParam:String! = String(UTF8String: UnsafeMutablePointer<Int8>(cParam))
-        parameters.append(requestParam)
+    
+    //for index:Int in 0..<Int(agentRequest.nparam) {
+    //    let cParam = requestParams![index]
+    //    let requestParam:String! = String(UTF8String: UnsafeMutablePointer<Int8>(cParam))
+    //    parameters.append(requestParam)
+    //}
+    //var strings: [String] = []
+    if var ptr =  agentRequest.params {
+        while let s = ptr.pointee {
+            parameters.append(String(cString: s))
+            ptr += 1
+        }
     }
     
     do{
@@ -144,11 +153,11 @@ var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_R
             return CZabbix.SYSINFO_RET_OK
         }
         
-        var cResponseStr = result!.cString(using: NSUTF8StringEncoding)!
+        var cResponseStr = result!.cString(using: .utf8)!
         
         // Directly setting 'text' makes Zabbix crash when attempting to free() something (the AgentResult struct or something inside it)
         // Setting chars one by one seems do to the trick. Swift/C expert advice needed ;-)
-        res!.pointee.text = UnsafeMutablePointer<CChar>(allocatingCapacity: cResponseStr.count+1)
+        res!.pointee.text = UnsafeMutablePointer<CChar>.allocate(capacity: cResponseStr.count+1)
         for index:Int in 0..<Int( cResponseStr.count) {
             res!.pointee.text[index] = cResponseStr[index]
         }
@@ -158,12 +167,12 @@ var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_R
         
         res!.pointee.type =  CZabbix.AR_MESSAGE
 
-        let cMsgStr = String("\(error)").cString(using: NSUTF8StringEncoding)! //.cStringUsingEncoding(NSUTF8StringEncoding)!
+        let cMsgStr = String("\(error)").cString(using: .utf8)! //.cStringUsingEncoding(NSUTF8StringEncoding)!
         
         // Directly setting 'msg' makes Zabbix crash when attempting to free() something (the AgentResult struct or something inside it)
         // Setting chars one by one seems do to the trick. Swift/C expert advice needed ;-)
         //res.pointee.msg = UnsafeMutablePointer<Int8>(cMsgStr)
-        res!.pointee.msg = UnsafeMutablePointer<CChar>(allocatingCapacity: cMsgStr.count+1)
+        res!.pointee.msg = UnsafeMutablePointer<CChar>.allocate(capacity: cMsgStr.count+1)
         for index:Int in 0..<Int( cMsgStr.count) {
             res!.pointee.msg[index] = cMsgStr[index]
         }
@@ -207,8 +216,8 @@ public class Zabbix {
     
     public static func log(_ level: LogLevel = default_level, message: String) {
         
-        let cMessage = message.cString(using: NSUTF8StringEncoding)!
-        let msgPtr = UnsafeMutablePointer<Int8>(cMessage)
+        let cMessage = message.cString(using: .utf8)!
+        let msgPtr = UnsafeMutablePointer<Int8>(mutating: cMessage)
         CZabbix.g2z_log(level.rawValue, msgPtr)
         
         msgPtr.deinitialize()

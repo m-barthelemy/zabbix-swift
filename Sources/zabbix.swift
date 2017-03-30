@@ -114,6 +114,7 @@ func zbx_module_item_list() -> UnsafeMutablePointer<CZabbix.ZBX_METRIC> {
     return metrics
 }
 
+
 var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_REQUEST>?, UnsafeMutablePointer<CZabbix.AGENT_RESULT>?) -> Int32 = {
     (req, res) -> Int32 in
     
@@ -132,18 +133,17 @@ var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_R
     //var requestParams = UnsafePointer<UnsafeMutablePointer<Int8>>(agentRequest.params)
     var parameters: [String] = Array<String>()
     
-    //for index:Int in 0..<Int(agentRequest.nparam) {
-    //    let cParam = requestParams![index]
-    //    let requestParam:String! = String(UTF8String: UnsafeMutablePointer<Int8>(cParam))
-    //    parameters.append(requestParam)
-    //}
-    //var strings: [String] = []
     if var ptr =  agentRequest.params {
-        while let s = ptr.pointee {
-            parameters.append(String(cString: s))
-            ptr += 1
+        // agentRequest.params last pointer will be a null entry,
+        //  we want to stop before reaching it
+        for index:Int in 0..<Int(agentRequest.nparam) {
+            if let s = ptr.pointee {
+                parameters.append(String(cString: s))
+                ptr += 1
+            }
         }
     }
+    
     
     do{
         res!.pointee.type =  CZabbix.AR_TEXT //CZabbix.AR_STRING is limited to 255 "chars"
@@ -158,7 +158,7 @@ var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_R
         // Directly setting 'text' makes Zabbix crash when attempting to free() something (the AgentResult struct or something inside it)
         // Setting chars one by one seems do to the trick. Swift/C expert advice needed ;-)
         res!.pointee.text = UnsafeMutablePointer<CChar>.allocate(capacity: cResponseStr.count+1)
-        for index:Int in 0..<Int( cResponseStr.count) {
+        for index:Int in 0..<Int(cResponseStr.count) {
             res!.pointee.text[index] = cResponseStr[index]
         }
     }

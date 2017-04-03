@@ -6,7 +6,6 @@
 //
 //
 
-//import CoreFoundation
 import Foundation
 import CZabbix
 import Glibc
@@ -14,7 +13,7 @@ import Glibc
 
 let default_level = LogLevel.Debug
 
-enum GenericError : ErrorProtocol {
+enum GenericError : Error {
     case BadParameters(String)
     case BadZabbixParameters(String)
 }
@@ -125,14 +124,14 @@ var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_R
     
     let agentRequest: CZabbix.AGENT_REQUEST = req!.pointee
     
-    let requestKey:String = String(UTF8String: UnsafeMutablePointer<CChar>(agentRequest.key))!
+    let requestKey:String = String(data: UnsafeMutablePointer<CChar>(agentRequest.key), encoding: .utf8)!
     Zabbix.log(default_level, message: "[zbx-swift]: Agent Request Key = '\(requestKey)' with \(agentRequest.nparam) parameters.")
     
     var requestParams = UnsafePointer<UnsafeMutablePointer<Int8>>(agentRequest.params)
     var parameters: [String] = Array<String>()
     for index:Int in 0..<Int(agentRequest.nparam) {
         let cParam = requestParams![index]
-        let requestParam:String! = String(UTF8String: UnsafeMutablePointer<Int8>(cParam))
+        let requestParam:String! = String(data: UnsafeMutablePointer<Int8>(cParam), encoding: .utf8)
         parameters.append(requestParam)
     }
     
@@ -144,11 +143,11 @@ var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_R
             return CZabbix.SYSINFO_RET_OK
         }
         
-        var cResponseStr = result!.cString(using: NSUTF8StringEncoding)!
+        var cResponseStr = result!.cString(using: .utf8)!
         
         // Directly setting 'text' makes Zabbix crash when attempting to free() something (the AgentResult struct or something inside it)
         // Setting chars one by one seems do to the trick. Swift/C expert advice needed ;-)
-        res!.pointee.text = UnsafeMutablePointer<CChar>(allocatingCapacity: cResponseStr.count+1)
+        res!.pointee.text = UnsafeMutablePointer<CChar>.allocate(cResponseStr.count+1)
         for index:Int in 0..<Int( cResponseStr.count) {
             res!.pointee.text[index] = cResponseStr[index]
         }
@@ -162,7 +161,6 @@ var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_R
         
         // Directly setting 'msg' makes Zabbix crash when attempting to free() something (the AgentResult struct or something inside it)
         // Setting chars one by one seems do to the trick. Swift/C expert advice needed ;-)
-        //res.pointee.msg = UnsafeMutablePointer<Int8>(cMsgStr)
         res!.pointee.msg = UnsafeMutablePointer<CChar>(allocatingCapacity: cMsgStr.count+1)
         for index:Int in 0..<Int( cMsgStr.count) {
             res!.pointee.msg[index] = cMsgStr[index]

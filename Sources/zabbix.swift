@@ -23,7 +23,7 @@ enum GenericError : Error {
 @_cdecl("zbx_module_api_version")
 func zbx_module_api_version() -> Int32 {
     
-    return CZabbix.ZBX_MODULE_API_VERSION_ONE
+    return CZabbix.ZBX_MODULE_API_VERSION
 }
 
 
@@ -125,7 +125,6 @@ var process_agent_request : @convention(c) (UnsafeMutablePointer<CZabbix.AGENT_R
     
     var agentRequest: CZabbix.AGENT_REQUEST = req!.pointee
     
-    //let requestKey:String = String(data: UnsafeMutablePointer<Int8>(agentRequest.key), encoding: .utf8)
     let requestKey:String = String(cString: UnsafeMutablePointer<Int8>(agentRequest.key))
     Zabbix.log(default_level, message: "[zbx-swift]: Agent Request Key = '\(requestKey)' with \(agentRequest.nparam) parameters.")
    

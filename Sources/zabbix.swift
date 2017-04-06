@@ -22,7 +22,7 @@ enum GenericError : Error {
 @_cdecl("zbx_module_api_version")
 func zbx_module_api_version() -> Int32 {
     
-    return CZabbix.ZBX_MODULE_API_VERSION_ONE
+    return CZabbix.ZBX_MODULE_API_VERSION
 }
 
 

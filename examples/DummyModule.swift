@@ -1,4 +1,3 @@
-
 import Glibc
 import Foundation
 import ZabbixModule
@@ -15,7 +14,6 @@ func zbx_module_init() -> Int32 {
         "dummy.echo"        : Dummy.Echo,
     ] )
 }
-
 
 
 public final class Dummy {
